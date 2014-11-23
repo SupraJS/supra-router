@@ -48,10 +48,16 @@ module.exports = Supra.Class.extend({
 	 */
 	checkRoutes:function(){
 		var request = this.req.url.substr(1,this.req.url.length);
+		var params;
+		for (url in this){
+			if (url.substr(0,1) === '/'){
+				if (params = this.matchRoute(url)){
+					this.route = this[url].apply(this,params);
+				}
+			}
+		}
 
-			if (this[request]){
-				this.route = this[request]()
-			}else{
+			if (!this.route){
 				this.route = {
 					controller : URL[1] || Supra.prefs.defaultController,
 					method : URL[2] || 'index',
@@ -61,8 +67,33 @@ module.exports = Supra.Class.extend({
 		this.loadController(this.route);
 
 	},
+	/**
+	 * [matchRoute description]
+	 * @return {[type]} [description]
+	 */
+	matchRoute : function(route){
+		var match = true;
+		var params = [];
+		var routeArray = route.split('/')
+		var requestedRouteArray = this.req.url.split('/')
+		// [tetas,list]
+		// [tetas,:teta]
+		routeArray.forEach(function(routeFragment,index){
+			if (routeFragment.indexOf(':') === -1){
+				if (routeFragment !== requestedRouteArray[index]){
+					match = false;
+				}
+			}else{
+				params.push(requestedRouteArray[index]);
+			}
+		})
+		if (match){
+			return params;
+		}else{
+			return false;
+		}
 
-
+	},
 
 	/**
 	 * [loadController description]
